@@ -16,6 +16,18 @@ LEG_ASM_CONST_KEYWORD = 'const'
 INSTRUCTIONS_SIZE = 4
 INSTRUCTION_NUMBER_START = 1
 
+if len(argv) == 3:
+    raise ValueError("Too many/few arguments. Please specify output file or remove -o flag")
+
+if len(argv) == 1:
+    raise ValueError("Too few arguments. Please specify source file")
+
+if len(argv) == 2:
+    output_file = argv[1].replace(LEG_ASM_EXTENSION, LEG_MACHINE_CODE_EXTENSION)
+    
+if len(argv) == 4:
+    output_file = argv[3]
+
 # Better to catch sooner rather than later
 operations = lasm_lib.validate_opcodes(lasm_lib.OPCODES_DICT)
 
@@ -115,7 +127,7 @@ for line in lines:
     line_number += 1
 
 # Now for the assembely part
-with open(f"{asm_file}.lmc", 'w') as f:
+with open(output_file, 'w') as f:
     line_number = 0
     for line in lines:
         if line.startswith(LEG_ASM_JUMP_KEYWORD) or line.startswith(LEG_ASM_CONST_KEYWORD) or line.startswith(LEG_ASM_COMMENT) or line == '':
@@ -137,11 +149,3 @@ with open(f"{asm_file}.lmc", 'w') as f:
         
         f.write(f"{hex(opcode)} {hex(arg1)} {hex(arg2)} {hex(dest)}\n")
         line_number += 1
-
-''' args to add: 
-stdout vs to file
-output file name (defaults to {asm_file}.lmc)
-validate opcodes
-autoscan for files
-configuration file
-'''
