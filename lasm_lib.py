@@ -38,7 +38,7 @@ OPCODES_DICT = {
                 "args": 2,
             },
         },
-        "code": 0b000000   
+        "code": 0b00000000   
     },
     
     "set1": {
@@ -78,7 +78,7 @@ OPCODES_DICT = {
                 "args": 2,
             },
         },
-        "code": 0b000001
+        "code": 0b00000100
     },
     
     "set2": {
@@ -116,7 +116,7 @@ OPCODES_DICT = {
             },
         },
     },
-    "code": 0b000010
+    "code": 0b00001000
 }
     
 def validate_opcodes(opcodes_dict):
@@ -157,6 +157,7 @@ def validate_opcodes(opcodes_dict):
                     
                 opcode_code_list.append(opcode_code)
                 operations[operation] = opcodes_dict[set][subset][operation]
+                operations[operation]["set"] = set
         i += 1
         
     return operations
@@ -169,7 +170,8 @@ if __name__ == "__main__":
     validate_opcodes(OPCODES_DICT)
 
 REG_LIST = ['reg0', 'reg1', 'reg2', 'reg3', 'reg4', 'reg5']
-DEST_LIST = REG_LIST + ['counter']
+DEST_LIST = REG_LIST + ['counter', 'output']
+INPUT_LIST = REG_LIST + ['', 'input']
 
 def correctNumOfArgs(args: list, operation: str) -> bool:
     drop_counter = 0
@@ -177,3 +179,10 @@ def correctNumOfArgs(args: list, operation: str) -> bool:
         if arg == '_':
             drop_counter += 1
     return 2 - drop_counter == OPCODES_DICT[operation]['args']
+
+def argument_binary_value(arg: str) -> int:
+    if arg == '_':
+        return 0b1000
+    else:
+        return INPUT_LIST.index(arg)
+    
