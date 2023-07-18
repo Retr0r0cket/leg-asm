@@ -1,6 +1,6 @@
 # Operations organization: opset (each set of 0-7), purpose/subset, operation {code, # of args}
 
-VALID_OPERATIONS = {
+OPCODES_DICT = {
     "set0": {
         "math": {
             "add": {
@@ -38,7 +38,7 @@ VALID_OPERATIONS = {
                 "args": 2,
             },
         },
-        "code": 0b00   
+        "code": 0b000000   
     },
     
     "set1": {
@@ -78,7 +78,7 @@ VALID_OPERATIONS = {
                 "args": 2,
             },
         },
-        "code": 0b01
+        "code": 0b000001
     },
     
     "set2": {
@@ -104,42 +104,43 @@ VALID_OPERATIONS = {
                 "args": 2,
             },
         },
-        "heap": {
-            "heap_load": {
+        "memory": {
+            "mem_load": {
                 "code": 5,
-                "args": 1,
+                "args": 0,
             },
-            "heap_save": {
+            "mem_save": {
                 "code": 6,
                 "args": 1,
+                "disable_destination": False
             },
         },
     },
-    "code": 0b10
+    "code": 0b000010
 }
     
-def validate_opcodes(opcodes_list):
-    if not isinstance(opcodes_list, dict):
+def validate_opcodes(opcodes_dict):
+    if not isinstance(opcodes_dict, dict):
         raise TypeError("opcodes must be a dictionary")
     
-    sets = list(opcodes_list.keys())
-    subsets = [list(opcodes_list[set].keys()) for set in sets]
+    sets = list(opcodes_dict.keys())
+    subsets = [list(opcodes_dict[set].keys()) for set in sets]
     # Eliminate codes for sets, meant as compiler variables
     for subset in subsets:
         for key in subset:
             if key == "code":
                 subset.remove(key)
     
-    operations = []
+    operations = {}
     i = 0
-    for set in opcodes_list:
+    for set in opcodes_dict:
         for subset in subsets[i]:
             opcode_code_list = []
-            for operation in opcodes_list[set][subset]:
-                if not isinstance(opcodes_list[set][subset][operation], dict):
+            for operation in opcodes_dict[set][subset]:
+                if not isinstance(opcodes_dict[set][subset][operation], dict):
                     raise TypeError(f"opcode must be a dictionary, not {type(operation)}")
                 
-                opcode_code = opcodes_list[set][subset][operation]["code"]
+                opcode_code = opcodes_dict[set][subset][operation]["code"]
                 # code handling
                 if not isinstance(opcode_code, int):
                     raise TypeError(f"opcode code must be an integer, not {type(opcode_code)}")
@@ -151,14 +152,28 @@ def validate_opcodes(opcodes_list):
                 from re import match
                 if not match(r"^[\w\d_]*", operation):
                     raise ValueError(f"Invalid opcode name: {operation}. All characters must be alphanumeric or underscore")
+                if opcodes_dict[set][subset][operation]["args"] not in [1, 2]:
+                    raise ValueError(f"Invalid number of arguments for {operation}")
                     
                 opcode_code_list.append(opcode_code)
-                operations.append(operation)
+                operations[operation] = opcodes_dict[set][subset][operation]
         i += 1
+        
+    return operations
     
     # Make sure no opcode name duplicates
     if len(set(operations)) != len(operations):
         raise ValueError("Duplicate opcode names found")
 
 if __name__ == "__main__":
-    validate_opcodes(VALID_OPERATIONS)
+    validate_opcodes(OPCODES_DICT)
+
+REG_LIST = ['reg0', 'reg1', 'reg2', 'reg3', 'reg4', 'reg5']
+DEST_LIST = REG_LIST + ['counter']
+
+def correctNumOfArgs(args: list, operation: str) -> bool:
+    drop_counter = 0
+    for arg in args:
+        if arg == '_':
+            drop_counter += 1
+    return 2 - drop_counter == OPCODES_DICT[operation]['args']
