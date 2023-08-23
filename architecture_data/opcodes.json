@@ -1,0 +1,117 @@
+{
+    "set0": {
+        "math": {
+            "add": {
+                "code": 0,
+                "args": 2
+            },
+            "sub": {
+                "code": 1,
+                "args": 2
+            },
+            "mult_low": {
+                "code": 6,
+                "args": 2
+            },
+            "mult_up": {
+                "code": 7,
+                "args": 2
+            }
+        },
+        "logic": {
+            "and": {
+                "code": 2,
+                "args": 2
+            },
+            "or": {
+                "code": 3,
+                "args": 2
+            },
+            "not": {
+                "code": 4,
+                "args": 1
+            },
+            "xor": {
+                "code": 5,
+                "args": 2
+            }
+        },
+        "code": 0   
+    },
+    
+    "set1": {
+        "cond": {
+            "equal": {
+                "code": 0,
+                "args": 2
+            },
+            "not_equal": {
+                "code": 1,
+                "args": 2
+            },
+            "less": {
+                "code": 2,
+                "args": 2
+            },
+            "less_or_equal": {
+                "code": 3,
+                "args": 2
+            },
+            "greater": {
+                "code": 4,
+                "args": 2
+            },
+            "greater_or_equal": {
+                "code": 5,
+                "args": 2
+            }
+        },
+        "div": {
+            "div_product": {
+                "code": 6,
+                "args": 2
+            },
+            "div_mod_2": {
+                "code": 7,
+                "args": 2
+            }
+        },
+        "code": 4
+    },
+    
+    "set2": {
+        "shift": {
+            "a_shift_r": {
+                "code": 0,
+                "args": 2
+            },
+            "roll_r": {
+                "code": 1,
+                "args": 2
+            },
+            "roll_l": {
+                "code": 2,
+                "args": 2
+            },
+            "shift_r": {
+                "code": 3,
+                "args": 2
+            },
+            "shift ": {
+                "code": 4,
+                "args": 2
+            }
+        },
+        "memory": {
+            "mem_load": {
+                "code": 5,
+                "args": 0
+            },
+            "mem_save": {
+                "code": 6,
+                "args": 1
+            }
+        }
+    },
+    "code": 8
+}
