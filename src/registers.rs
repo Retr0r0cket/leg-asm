@@ -11,7 +11,7 @@ impl Iterator for Registers {
     type Item = String;
 
     fn next(&mut self) -> Option<String> {
-        let mut next = None;
+        let mut next: Option<String> = None;
         if !self.data_registers.is_empty() {
             next = self.data_registers.pop();
         } else if !self.inputs.is_empty() {
@@ -25,9 +25,11 @@ impl Iterator for Registers {
 
 impl Registers {
     pub fn check_for_duplicates (&mut self) -> bool {
+        let all_item_iter = self.data_registers.iter().chain(self.inputs.iter()).chain(self.outputs.iter());
+
         let mut duplicates = false;
         let mut seen: Vec<&String> = Vec::new();
-        for register in self.data_registers.iter().chain(self.inputs.iter()).chain(self.outputs.iter()) {
+        for register in all_item_iter {
             if seen.contains(&register) {
                 duplicates = true;
                 break;

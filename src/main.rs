@@ -40,7 +40,7 @@ fn main() {
             panic!("Register json contains duplicate entries");
         }
         if registers_json_data.check_for_uppercase == True {
-            panic("Register json includes registers with uppercase");
+            panic!("Register json includes registers with uppercase");
         }
     };
 
