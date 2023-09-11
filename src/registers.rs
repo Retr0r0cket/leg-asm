@@ -1,7 +1,6 @@
-use serde::{Deserialize, Serialize};
+use crate::error_handling;
 
-#[derive(Deserialize, Serialize, Debug)]
-struct Registers {
+pub struct Registers {
     data_registers: Vec<String>,
     inputs: Vec<String>,
     outputs: Vec<String>,
@@ -24,30 +23,59 @@ impl Iterator for Registers {
 }
 
 impl Registers {
-    pub fn check_for_duplicates (&mut self) -> bool {
+    pub fn new(file_path: &str) -> Registers {
+        let registers_file_data:Result<std::fs::File, std::io::Error> = std::fs::File::open(file_path);
+        let registers_file_data_result: std::fs::File = match registers_file_data {
+            Ok(file) => file,
+            Err(error) => error_handling::exit_from_io_error(error, error_handling::FilesType::Registers, file_path),
+        };
+        let registers_json_data: Registers  = serde_json::from_reader(registers_file_data).unwrap();
+        registers_json_data.init_checks(file_path);
+        registers_json_data
+    }
+
+    fn init_checks(&self, file_path: &str )  {
+        let uppercase: bool = self.check_for_uppercase();
+        let duplicates: bool = self.check_for_duplicates();
+
+        if uppercase == true || duplicates == true {
+
+            let uppercase_error: &str = match uppercase {
+                true => ", uppercase letters are not allowed in register names",
+                false => "",
+            };
+            let duplicates_error: &str = match duplicates {
+                true => ", duplicate register names are not allowed",
+                false => "",
+            };
+
+            println!("Error: error with registers file located at {}{}{}", file_path, uppercase_error, duplicates_error);
+            std::process::exit(1);
+        }  
+    }
+    
+    fn check_for_duplicates (&self) -> bool {
         let all_item_iter = self.data_registers.iter().chain(self.inputs.iter()).chain(self.outputs.iter());
 
         let mut duplicates = false;
         let mut seen: Vec<&String> = Vec::new();
         for register in all_item_iter {
             if seen.contains(&register) {
-                duplicates = true;
-                break;
+                true;
             } else {
                 seen.push(register);
             }
         }
-        duplicates
+        false
     }
 
-    pub fn check_for_uppercase (&mut self) -> bool {
+    fn check_for_uppercase (&self) -> bool {
         let mut case = false;
         for register in self.data_registers.iter().chain(self.inputs.iter()).chain(self.outputs.iter()) {
             if register.chars().any(char::is_uppercase) {
-                case = true;
-                break;
+                true;
             }
         }
-        case
-    }
+        false
+    } 
 }
