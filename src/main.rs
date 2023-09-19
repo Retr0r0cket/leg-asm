@@ -1,6 +1,5 @@
-use std::fs::File;
-
 mod error_handling;
+mod opcodes;
 mod registers;
 
 // Default file extensions
@@ -13,12 +12,13 @@ const REGISTERS_JSON_LOCATION: &str = "./architecture_data/registers.json";
 
 // Architecture does not contain variable length instructions, must be 4 instructions per line
 const INSTRUCTIONS_PER_LINE: u8 = 4;
+const OPCODES_BIT_PREFIX: u8 = 8;
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
 
     if args.len() != 3 {
-        panic!("Usage: legasm <source file> <destination>");
+        panic!("Usage: lasm <source file> <destination>");
     }
 
     let source_file_location: &String = &args[1];
@@ -37,16 +37,34 @@ fn main() {
         );
     }
 
+    // Opcodes and registers are small enough to read as a string
     let registers_data = registers::Registers::new(REGISTERS_JSON_LOCATION);
+    let opcodes_list: Vec<opcodes::Opcodes> = opcodes::new(OPCODES_JSON_LOCATION);
 
     // Read with buffer for source file, don't know how long it will be
-    // Opcodes and registers are small enough to read as a string
-    let source_file_data = File::open(source_file_location).expect("Failed to open source file");
-    let opcodes_file_data =
-        File::open(OPCODES_JSON_LOCATION).expect("Failed to open opcodes data file");
+    let source_file_data =
+        read_file_or_io_error(source_file_location, error_handling::FilesType::Source);
+    let source_file_buffer = std::io::BufReader::new(source_file_data);
+}
+
+fn read_file_or_io_error(file_path: &str, file_type: error_handling::FilesType) -> std::fs::File {
+    let file = if std::fs::File::open(file_path).is_ok() {
+        Some(std::fs::File::open(file_path).unwrap())
+    } else {
+        error_handling::exit_from_io_error(
+            std::fs::File::open(file_path).unwrap_err(),
+            file_type,
+            file_path,
+        );
+        None
+    }
+    .unwrap();
+    return file;
 }
 
 // add conf file
 // add tests
 // add documentation
 // add embedded json data
+// add register alias support
+// make file listing what all exit codes actually mean

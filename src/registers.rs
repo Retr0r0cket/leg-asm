@@ -1,5 +1,6 @@
-use crate::error_handling;
 use std::fs::File;
+
+use crate::error_handling;
 
 // No input overlap in register vectors
 #[derive(serde::Deserialize, Debug)]
@@ -26,19 +27,11 @@ impl Iterator for Registers {
     }
 }
 
+// Clean this up if you can
 impl Registers {
     pub fn new(file_path: &str) -> Registers {
-        let registers_file = if File::open(file_path).is_ok() {
-            Some(File::open(file_path).unwrap())
-        } else {
-            error_handling::exit_from_io_error(
-                std::io::Error::new(std::io::ErrorKind::NotFound, "File not found"),
-                error_handling::FilesType::Registers,
-                file_path,
-            );
-            None
-        }
-        .unwrap();
+        let registers_file =
+            crate::read_file_or_io_error(file_path, error_handling::FilesType::Registers);
 
         let registers_json_data: Option<Registers> =
             if serde_json::from_reader::<&File, Registers>(&registers_file).is_ok() {
@@ -49,7 +42,8 @@ impl Registers {
                     error_handling::JsonFileType::Registers,
                 );
                 None
-            }.unwrap();
+            }
+            .unwrap();
         let decoded_json_data: Registers = registers_json_data.unwrap();
         decoded_json_data.init_checks(file_path);
         decoded_json_data

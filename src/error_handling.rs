@@ -1,3 +1,5 @@
+use std::process::exit;
+
 // So we could panic for all of these, but it wouldn't provide good error information
 // Also allows for custom error codes instead of just 101 if something goes wrong
 
@@ -29,9 +31,10 @@ pub fn exit_from_io_error(error: std::io::Error, io_error_file_type: FilesType, 
         FilesType::Source => 2,
     };
 
-    std::process::exit(exit_code);
+    exit(exit_code);
 }
 
+// Should be able to get rid of this enum and just use file types enum
 pub enum JsonFileType {
     Opcodes,
     Registers,
@@ -52,5 +55,5 @@ pub fn exit_from_json_parsing_error(error: serde_json::Error, json_file_type: Js
             JsonFileType::Registers => 1,
         };
 
-    std::process::exit(exit_code);
+    exit(exit_code);
 }
