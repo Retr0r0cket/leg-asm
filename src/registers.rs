@@ -68,7 +68,7 @@ impl Registers {
                 "Error: error with registers file located at {}{}{}",
                 file_path, uppercase_error, duplicates_error
             );
-            std::process::exit(1);
+            std::process::exit(50);
         }
     }
 

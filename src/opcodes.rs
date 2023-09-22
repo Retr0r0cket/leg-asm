@@ -2,13 +2,13 @@ use crate::error_handling;
 use serde_json::Value;
 
 pub struct Opcodes {
-    name: String,
-    bit_prefix: i64,
-    num_of_args: i64,
-    opcode_set: i64,
+    pub name: String,
+    pub bit_prefix: i64,
+    pub num_of_args: i64,
+    pub opcode_set: i64,
 }
 
-pub fn new(file_path: &str) -> Vec<Opcodes> {
+pub fn init_opcodes_list(file_path: &str) -> Vec<Opcodes> {
     let opcodes_file = crate::read_file_or_io_error(file_path, error_handling::FilesType::Opcodes);
 
     let opcodes_json: Option<serde_json::Value> =

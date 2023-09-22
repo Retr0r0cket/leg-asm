@@ -14,11 +14,15 @@ const REGISTERS_JSON_LOCATION: &str = "./architecture_data/registers.json";
 const INSTRUCTIONS_PER_LINE: u8 = 4;
 const OPCODES_BIT_PREFIX: u8 = 8;
 
+// Default binary name for assembler
+const DEFAULT_BINARY_NAME: &str = "./lasm";
+
 fn main() {
     let args: Vec<String> = std::env::args().collect();
 
     if args.len() != 3 {
-        panic!("Usage: lasm <source file> <destination>");
+        eprintln!("Usage: {} <source file> <destination>", DEFAULT_BINARY_NAME);
+        std::process::exit(1);
     }
 
     let source_file_location: &String = &args[1];
@@ -39,12 +43,15 @@ fn main() {
 
     // Opcodes and registers are small enough to read as a string
     let registers_data = registers::Registers::new(REGISTERS_JSON_LOCATION);
-    let opcodes_list: Vec<opcodes::Opcodes> = opcodes::new(OPCODES_JSON_LOCATION);
+    let opcodes_list: Vec<opcodes::Opcodes> = opcodes::init_opcodes_list(OPCODES_JSON_LOCATION);
+    let opcode_name_list: Vec<String> = opcodes_list
+        .iter()
+        .map(|opcode| opcode.name.to_owned())
+        .collect();
 
     // Read with buffer for source file, don't know how long it will be
     let source_file_data =
         read_file_or_io_error(source_file_location, error_handling::FilesType::Source);
-    let source_file_buffer = std::io::BufReader::new(source_file_data);
 }
 
 fn read_file_or_io_error(file_path: &str, file_type: error_handling::FilesType) -> std::fs::File {
