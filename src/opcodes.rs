@@ -10,32 +10,27 @@ pub struct Opcodes {
 
 pub fn init_opcodes_list(file_path: &str) -> Vec<Opcodes> {
     let opcodes_file = crate::read_file_or_io_error(file_path, error_handling::FilesType::Opcodes);
-
-    let opcodes_json: Option<serde_json::Value> =
-        if serde_json::from_reader::<&std::fs::File, serde_json::Value>(&opcodes_file).is_ok() {
-            Some(serde_json::from_reader(opcodes_file).unwrap())
-        } else {
-            error_handling::exit_from_json_parsing_error(
-                serde_json::from_reader::<std::fs::File, serde_json::Value>(opcodes_file)
-                    .unwrap_err(),
-                error_handling::JsonFileType::Opcodes,
-            );
-            None
-        }
-        .unwrap();
-    let opcodes_json_data = opcodes_json.unwrap().as_array().unwrap().to_owned();
-
-    if &opcodes_json_data.len() < &2 {
-        eprintln!(
-            "Error: opcodes file located at {} is empty or does not contain bit code",
-            file_path
+    let opcodes_json_result: Result<serde_json::Value, serde_json::Error> =
+        serde_json::from_reader::<&std::fs::File, serde_json::Value>(&opcodes_file);
+    if opcodes_json_result.is_err() {
+        error_handling::exit_from_json_parsing_error(
+            serde_json::from_reader::<std::fs::File, serde_json::Value>(opcodes_file).unwrap_err(),
+            error_handling::JsonFileType::Opcodes,
         );
-        std::process::exit(40);
     }
 
-    let mut real_opcodes_set: Vec<Value> = Vec::new();
+    let opcodes_json = opcodes_json_result.unwrap();
+    let opcodes_json_array_option = opcodes_json.as_array();
+    if opcodes_json_array_option.is_none() {
+        opcodes_empty_error(file_path)
+    }
+    let opcodes_as_array = opcodes_json_array_option.unwrap();
+    if opcodes_as_array.len() < 2 {
+        opcodes_empty_error(file_path);
+    }
 
-    let mut opcode_set_iter = opcodes_json_data.iter();
+    let mut opcodes_sets: Vec<Value> = Vec::new();
+    let mut opcode_set_iter = opcodes_as_array.iter();
     _ = opcode_set_iter.next_back();
 
     for set in opcode_set_iter {
@@ -43,19 +38,18 @@ pub fn init_opcodes_list(file_path: &str) -> Vec<Opcodes> {
 
         if set_length == 0 || set_length > 8 {
             eprintln!(
-                "Error: opcode set {} contains too many or too few (0) elements",
+                "Error: opcode set {} contains too many (>8) or too few (0) elements",
                 set
             );
             std::process::exit(41);
         }
-        real_opcodes_set.push(set.clone());
+        opcodes_sets.push(set.clone());
     }
 
     let mut opcodes: Vec<Opcodes> = Vec::new();
-
     let mut set_count: u8 = 0;
 
-    for set in real_opcodes_set.into_iter() {
+    for set in opcodes_sets.into_iter() {
         for subset in set.as_array().to_owned().unwrap().into_iter() {
             for opcode in subset.as_array().to_owned().unwrap().into_iter() {
                 let name = opcode["name"].as_str().unwrap().to_owned();
@@ -74,12 +68,6 @@ pub fn init_opcodes_list(file_path: &str) -> Vec<Opcodes> {
         set_count += 1;
     }
 
-    validate(&opcodes);
-
-    opcodes
-}
-
-fn validate(opcodes: &Vec<Opcodes>) {
     let mut seen: Vec<&String> = Vec::new();
 
     for opcode in opcodes.iter() {
@@ -111,8 +99,17 @@ fn validate(opcodes: &Vec<Opcodes>) {
         if seen.contains(&&opcode.name) {
             eprintln!("Error: opcode {} is a duplicate", opcode.name);
             std::process::exit(46);
-        } else {
-            seen.push(&opcode.name);
         }
+        seen.push(&opcode.name);
     }
+
+    opcodes
+}
+
+fn opcodes_empty_error(file_path: &str) {
+    eprintln!(
+        "Error: opcodes file located at {} is empty or does not contain bit code",
+        file_path
+    );
+    std::process::exit(40);
 }

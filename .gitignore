@@ -1,8 +1,6 @@
 # Contains .lasm files that are known to run for testing compilation
 testing
 
-.vscode
-
 # Added by cargo
 
 /target

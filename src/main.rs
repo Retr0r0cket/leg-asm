@@ -42,31 +42,44 @@ fn main() {
     }
 
     // Opcodes and registers are small enough to read as a string
-    let registers_data = registers::Registers::new(REGISTERS_JSON_LOCATION);
+    let registers_data = registers::Registers::init(REGISTERS_JSON_LOCATION);
     let opcodes_list: Vec<opcodes::Opcodes> = opcodes::init_opcodes_list(OPCODES_JSON_LOCATION);
     let opcode_name_list: Vec<String> = opcodes_list
         .iter()
         .map(|opcode| opcode.name.to_owned())
         .collect();
 
-    // Read with buffer for source file, don't know how long it will be
-    let source_file_data =
+    let source_file =
         read_file_or_io_error(source_file_location, error_handling::FilesType::Source);
+    let source_buf_reader = std::io::BufReader::new(source_file);
+    let source_line_iter = std::io::BufRead::lines(source_buf_reader);
+
+    let mut jump_labels: Vec<String> = Vec::new();
+
+    for line in source_line_iter {
+        if line.is_err() {
+            error_handling::exit_from_io_error(
+                line.unwrap_err(),
+                error_handling::FilesType::Source,
+                source_file_location,
+            );
+            std::process::exit(32);
+        }
+        let line_string = line.unwrap();
+        let line_word_vector: Vec<&str> = line_string.split_whitespace().collect();
+    }
 }
 
 fn read_file_or_io_error(file_path: &str, file_type: error_handling::FilesType) -> std::fs::File {
-    let file = if std::fs::File::open(file_path).is_ok() {
-        Some(std::fs::File::open(file_path).unwrap())
-    } else {
+    let file = std::fs::File::open(file_path);
+    if file.is_err() {
         error_handling::exit_from_io_error(
             std::fs::File::open(file_path).unwrap_err(),
             file_type,
             file_path,
         );
-        None
     }
-    .unwrap();
-    return file;
+    file.unwrap()
 }
 
 // add conf file
@@ -75,3 +88,4 @@ fn read_file_or_io_error(file_path: &str, file_type: error_handling::FilesType) 
 // add embedded json data
 // add register alias support
 // make file listing what all exit codes actually mean
+// Add hex output support
