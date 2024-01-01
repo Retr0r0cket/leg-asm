@@ -1,4 +1,9 @@
-mod error_handling;
+#![feature(str_split_whitespace_remainder)]
+
+use std::fs::File;
+use std::io::BufRead;
+use std::path::Path;
+
 mod opcodes;
 mod registers;
 
@@ -14,19 +19,33 @@ const REGISTERS_JSON_LOCATION: &str = "./architecture_data/registers.json";
 const INSTRUCTIONS_PER_LINE: u8 = 4;
 const OPCODES_BIT_PREFIX: u8 = 8;
 
-// Default binary name for assembler
-const DEFAULT_BINARY_NAME: &str = "./lasm";
+#[repr(u8)]
+enum OutputTextType {
+    Hexadecimal,
+    Base10,
+    Plaintext,
+}
 
+struct Config<'a> {
+    output_mode: OutputTextType,
+    use_embedded_json: bool,
+    opcode_json_location: &'a str,
+    registers_json_location: &'a str,
+}
 fn main() {
+    let config = parse_config("./leg-asm.conf");
     let args: Vec<String> = std::env::args().collect();
 
     if args.len() != 3 {
-        eprintln!("Usage: {} <source file> <destination>", DEFAULT_BINARY_NAME);
+        eprintln!(
+            "Usage: {:?} <source file> <destination>",
+            std::env::current_exe()
+        );
         std::process::exit(1);
     }
 
-    let source_file_location: &String = &args[1];
-    let destination_file_location: &String = &args[2];
+    let source_file_location: &str = &args[1];
+    let destination_file_location: &str = &args[2];
 
     if !source_file_location.ends_with(LEGASM_FILE_EXTENSION) {
         println!(
@@ -48,38 +67,27 @@ fn main() {
         .iter()
         .map(|opcode| opcode.name.to_owned())
         .collect();
+}
 
-    let source_file =
-        read_file_or_io_error(source_file_location, error_handling::FilesType::Source);
-    let source_buf_reader = std::io::BufReader::new(source_file);
-    let source_line_iter = std::io::BufRead::lines(source_buf_reader);
+fn parse_config(config_file_path: &str) -> Config {
+    let config_file = File::open(config_file_path).unwrap();
+    let config_lines = lines_from_file(config_file_path);
 
-    let mut jump_labels: Vec<String> = Vec::new();
+    for line in config_lines {
+        let line_as_vec = line.split_whitespace().remainder().unwrap().filter();
+    }
 
-    for line in source_line_iter {
-        if line.is_err() {
-            error_handling::exit_from_io_error(
-                line.unwrap_err(),
-                error_handling::FilesType::Source,
-                source_file_location,
-            );
-            std::process::exit(32);
-        }
-        let line_string = line.unwrap();
-        let line_word_vector: Vec<&str> = line_string.split_whitespace().collect();
+    {
+        no
     }
 }
 
-fn read_file_or_io_error(file_path: &str, file_type: error_handling::FilesType) -> std::fs::File {
-    let file = std::fs::File::open(file_path);
-    if file.is_err() {
-        error_handling::exit_from_io_error(
-            std::fs::File::open(file_path).unwrap_err(),
-            file_type,
-            file_path,
-        );
-    }
-    file.unwrap()
+fn lines_from_file(filename: impl AsRef<Path>) -> Vec<String> {
+    let file = File::open(filename).expect("no such file");
+    let buf = std::io::BufReader::new(file);
+    buf.lines()
+        .map(|l| l.expect("Could not parse line"))
+        .collect()
 }
 
 // add conf file
@@ -89,3 +97,6 @@ fn read_file_or_io_error(file_path: &str, file_type: error_handling::FilesType) 
 // add register alias support
 // make file listing what all exit codes actually mean
 // Add hex output support
+// Use proper .expect/
+// Handle filenames/paths properly
+// deal with import statements at top of files

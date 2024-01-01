@@ -1,4 +1,4 @@
-use crate::error_handling;
+use std::fs::File;
 
 // No input overlap in register vectors
 #[derive(serde::Deserialize, Debug)]
@@ -10,18 +10,9 @@ pub struct Registers {
 
 impl Registers {
     pub fn init(file_path: &str) -> Registers {
-        let registers_file =
-            crate::read_file_or_io_error(file_path, error_handling::FilesType::Registers);
+        let registers_file = File::open(file_path).unwrap();
 
-        let raw_json: Result<Registers, serde_json::Error> =
-            serde_json::from_reader::<&std::fs::File, Registers>(&registers_file);
-        if raw_json.is_err() {
-            error_handling::exit_from_json_parsing_error(
-                serde_json::from_reader::<std::fs::File, Registers>(registers_file).unwrap_err(),
-                error_handling::JsonFileType::Registers,
-            );
-        }
-        let json_data: Registers = raw_json.unwrap();
+        let json_data = serde_json::from_reader::<&File, Registers>(&registers_file).unwrap();
 
         let mut seen: Vec<&String> = Vec::new();
         let registers_list = [

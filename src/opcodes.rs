@@ -1,5 +1,5 @@
-use crate::error_handling;
 use serde_json::Value;
+use std::fs::File;
 
 pub struct Opcodes {
     pub name: String,
@@ -11,11 +11,11 @@ pub struct Opcodes {
 pub fn init_opcodes_list(file_path: &str) -> Vec<Opcodes> {
     let opcodes_file = crate::read_file_or_io_error(file_path, error_handling::FilesType::Opcodes);
     let opcodes_json_result: Result<serde_json::Value, serde_json::Error> =
-        serde_json::from_reader::<&std::fs::File, serde_json::Value>(&opcodes_file);
+        serde_json::from_reader::<&File, serde_json::Value>(&opcodes_file);
     if opcodes_json_result.is_err() {
         error_handling::exit_from_json_parsing_error(
-            serde_json::from_reader::<std::fs::File, serde_json::Value>(opcodes_file).unwrap_err(),
-            error_handling::JsonFileType::Opcodes,
+            serde_json::from_reader::<File, serde_json::Value>(opcodes_file).unwrap_err(),
+            error_handling::FilesType::Opcodes,
         );
     }
 
